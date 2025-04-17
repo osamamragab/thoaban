@@ -2,13 +2,13 @@ const std = @import("std");
 const rl = @import("raylib");
 
 pub const Food = struct {
+    pos: rl.Vector2,
     size: f32,
-	color: rl.Color,
-	shape: rl.Vector2,
+    color: rl.Color,
 
     pub fn init(x: i32, y: i32, size: f32, color: rl.Color) Food {
         return Food{
-            .shape = .{
+            .pos = .{
                 .x = @as(f32, @floatFromInt(x)),
                 .y = @as(f32, @floatFromInt(y)),
             },
@@ -17,12 +17,12 @@ pub const Food = struct {
         };
     }
 
-    pub fn updatePosition(self: *Food, x: i32, y: i32) void {
-        self.shape.x = @as(f32, @floatFromInt(x));
-        self.shape.y = @as(f32, @floatFromInt(y));
-    }
-
     pub fn draw(self: *Food) void {
-        rl.drawCircleV(self.shape, self.size, self.color);
+        rl.drawCircle(
+            @as(i32, @intFromFloat(self.pos.x)),
+            @as(i32, @intFromFloat(self.pos.y)),
+			self.size,
+            self.color,
+        );
     }
 };

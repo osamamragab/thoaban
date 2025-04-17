@@ -4,28 +4,27 @@ const rl = @import("raylib");
 pub const Direction = enum { up, down, left, right };
 
 pub const Snake = struct {
+    pos: [256]rl.Vector2,
     dir: Direction,
-    size: i32,
-    speed: f32,
+    size: f32,
     color: rl.Color,
-    shape: rl.Rectangle,
+    length: usize,
 
-    pub fn init(x: i32, y: i32, size: i32, dir: Direction, color: rl.Color) Snake {
-        const xf = @as(f32, @floatFromInt(x));
-        const yf = @as(f32, @floatFromInt(y));
-        const sf = @as(f32, @floatFromInt(size));
-        return Snake{
+    pub fn init(x: i32, y: i32, size: f32, dir: Direction, color: rl.Color) Snake {
+        var snake = Snake{
+            .pos = undefined,
             .dir = dir,
             .size = size,
-            .speed = 3,
             .color = color,
-            .shape = rl.Rectangle.init(xf, yf, sf, sf),
+            .length = 1,
         };
+        snake.pos[0].x = @as(f32, @floatFromInt(x));
+        snake.pos[0].y = @as(f32, @floatFromInt(y));
+        return snake;
     }
 
-    pub fn updatePosition(self: *Snake, x: i32, y: i32) void {
-        self.shape.x = @as(f32, @floatFromInt(x));
-        self.shape.y = @as(f32, @floatFromInt(y));
+    pub fn rectangle(self: Snake) rl.Rectangle {
+        return rl.Rectangle.init(self.pos[0].x, self.pos[0].y, self.size, self.size);
     }
 
     pub fn setDirection(self: *Snake, dir: Direction) void {
@@ -44,17 +43,28 @@ pub const Snake = struct {
         }
     }
 
-    pub fn step(self: *Snake, score: i32) void {
-        const speed = 3 + @as(f32, @floatFromInt(score)) / 5;
+    pub fn step(self: *Snake) void {
+        for (1..self.length) |i| {
+            self.pos[self.length - i] = self.pos[self.length - i - 1];
+        }
         switch (self.dir) {
-            .up => self.shape.y -= speed,
-            .down => self.shape.y += speed,
-            .left => self.shape.x -= speed,
-            .right => self.shape.x += speed,
+            .up => self.pos[0].y -= self.size,
+            .down => self.pos[0].y += self.size,
+            .left => self.pos[0].x -= self.size,
+            .right => self.pos[0].x += self.size,
         }
     }
 
     pub fn draw(self: *Snake) void {
-        rl.drawRectangleRec(self.shape, self.color);
+        for (self.pos[0..self.length]) |p| {
+            if (p.x == 0 and p.y == 0) continue;
+            rl.drawRectangle(
+                @as(i32, @intFromFloat(p.x)),
+                @as(i32, @intFromFloat(p.y)),
+                @as(i32, @intFromFloat(self.size)),
+                @as(i32, @intFromFloat(self.size)),
+                self.color,
+            );
+        }
     }
 };
