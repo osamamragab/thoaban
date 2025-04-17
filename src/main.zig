@@ -8,6 +8,8 @@ pub fn main() anyerror!void {
     rl.setConfigFlags(.{ .window_resizable = true });
     rl.initWindow(game.screen.width, game.screen.height, "snakegame");
     defer rl.closeWindow();
+	rl.initAudioDevice();
+	defer rl.closeAudioDevice();
     rl.setTargetFPS(60);
 
     try game.loop();

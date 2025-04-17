@@ -3,6 +3,9 @@ const rl = @import("raylib");
 const Snake = @import("Snake.zig").Snake;
 const Food = @import("Food.zig").Food;
 
+const thth_sound_file = @embedFile("thth_sound");
+const disconnected_sound_file = @embedFile("disconnected_sound");
+
 const fmt = std.fmt;
 
 pub const Screen = struct {
@@ -108,10 +111,21 @@ pub const Game = struct {
         var paused = false;
         var gameover = false;
         var frames_counter: i32 = 0;
+        rl.setExitKey(.null);
         if (self.font == null) {
             self.font = try rl.getFontDefault();
         }
-        rl.setExitKey(.null);
+
+        const eatSoundWave = try rl.loadWaveFromMemory(".wav", thth_sound_file);
+        defer rl.unloadWave(eatSoundWave);
+        const eatSound = rl.loadSoundFromWave(eatSoundWave);
+        defer rl.unloadSound(eatSound);
+
+        const gameoverSoundWave = try rl.loadWaveFromMemory(".wav", disconnected_sound_file);
+        defer rl.unloadWave(gameoverSoundWave);
+        const gameoverSound = rl.loadSoundFromWave(gameoverSoundWave);
+        defer rl.unloadSound(gameoverSound);
+
         while (!rl.windowShouldClose()) {
             rl.beginDrawing();
             defer rl.endDrawing();
@@ -123,7 +137,9 @@ pub const Game = struct {
                 self.screen.height = rl.getScreenHeight();
             }
 
-            if ((rl.isKeyPressed(rl.KeyboardKey.left_control) or rl.isKeyPressed(rl.KeyboardKey.right_control)) and rl.isKeyPressed(rl.KeyboardKey.q)) rl.closeWindow();
+            if ((rl.isKeyPressed(rl.KeyboardKey.left_control) or rl.isKeyPressed(rl.KeyboardKey.right_control)) and rl.isKeyPressed(rl.KeyboardKey.q)) {
+                rl.closeWindow();
+            }
 
             rl.drawText(
                 rl.textFormat("Score: %d - Best: %d", .{ self.score, self.score_best }),
@@ -152,7 +168,9 @@ pub const Game = struct {
             }
 
             if (paused) {
-                if (rl.isKeyDown(rl.KeyboardKey.space)) paused = false;
+                if (rl.isKeyDown(rl.KeyboardKey.space)) {
+                    paused = false;
+                }
                 self.drawTextCenter("Paused", 24, 1, .white, .{
                     .x = 0,
                     .y = -(@as(f32, @floatFromInt(self.screen.height)) / 2) + 20,
@@ -164,6 +182,13 @@ pub const Game = struct {
 
             if (self.lost()) {
                 gameover = true;
+                frames_counter = 0;
+                if (!rl.isSoundPlaying(gameoverSound)) {
+                    if (rl.isSoundPlaying(eatSound)) {
+                        rl.stopSound(eatSound);
+                    }
+                    rl.playSound(gameoverSound);
+                }
             }
 
             if (@rem(frames_counter, 5) == 0) {
@@ -172,6 +197,9 @@ pub const Game = struct {
                     self.score += 1;
                     self.snake.length += 1;
                     self.reset(false);
+                    if (!rl.isSoundPlaying(eatSound)) {
+                        rl.playSound(eatSound);
+                    }
                 }
             }
 
@@ -180,7 +208,9 @@ pub const Game = struct {
 
             self.updateDirection();
 
-            if (rl.isKeyDown(rl.KeyboardKey.escape)) paused = true;
+            if (rl.isKeyDown(rl.KeyboardKey.escape)) {
+                paused = true;
+            }
 
             frames_counter += 1;
         }
