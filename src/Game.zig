@@ -195,6 +195,8 @@ pub const Game = struct {
                 self.snake.step();
                 if (rl.checkCollisionCircleRec(self.food.pos, self.food.size, self.snake.rectangle())) {
                     self.score += 1;
+					self.snake.pos[self.snake.length].x = 0;
+					self.snake.pos[self.snake.length].y = 0;
                     self.snake.length += 1;
                     self.reset(false);
                     if (!rl.isSoundPlaying(eatSound)) {
