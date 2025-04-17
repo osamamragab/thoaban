@@ -61,7 +61,8 @@ pub const Game = struct {
         self.food.pos.x = @as(f32, @floatFromInt(self.randomPosition(self.screen.width)));
         self.food.pos.y = @as(f32, @floatFromInt(self.randomPosition(self.screen.height)));
         for (self.snake.pos[0..self.snake.length]) |p| {
-            while (p.x == self.food.pos.x and p.y == self.food.pos.y) {
+            const rect = rl.Rectangle.init(p.x, p.y, self.snake.size, self.snake.size);
+            while (rl.checkCollisionCircleRec(self.food.pos, self.food.size, rect)) {
                 self.food.pos.x = @as(f32, @floatFromInt(self.randomPosition(self.screen.width)));
                 self.food.pos.y = @as(f32, @floatFromInt(self.randomPosition(self.screen.height)));
             }
@@ -105,6 +106,7 @@ pub const Game = struct {
 
     pub fn loop(self: *Game) anyerror!void {
         var paused = false;
+        var gameover = false;
         var frames_counter: i32 = 0;
         if (self.font == null) {
             self.font = try rl.getFontDefault();
@@ -139,22 +141,29 @@ pub const Game = struct {
                 .white,
             );
 
+            if (gameover) {
+                self.drawTextCenter("You lost bitch", 54, 1, .white, null);
+                self.drawTextCenter("Press [Space] to continue", 17, 1, .gray, .{ .x = 0, .y = 70 });
+                if (rl.isKeyDown(rl.KeyboardKey.space)) {
+                    self.reset(true);
+                    gameover = false;
+                }
+                continue;
+            }
+
             if (paused) {
                 if (rl.isKeyDown(rl.KeyboardKey.space)) paused = false;
                 self.drawTextCenter("Paused", 24, 1, .white, .{
                     .x = 0,
                     .y = -(@as(f32, @floatFromInt(self.screen.height)) / 2) + 20,
                 });
-				self.snake.draw();
-				self.food.draw();
+                self.snake.draw();
+                self.food.draw();
                 continue;
             }
 
             if (self.lost()) {
-                self.drawTextCenter("You lost bitch", 54, 1, .white, null);
-                self.drawTextCenter("Press [Space] to continue", 17, 1, .gray, .{ .x = 0, .y = 70 });
-                if (rl.isKeyDown(rl.KeyboardKey.space)) self.reset(true);
-                continue;
+                gameover = true;
             }
 
             if (@rem(frames_counter, 5) == 0) {
