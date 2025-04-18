@@ -1,9 +1,11 @@
 const std = @import("std");
 const rl = @import("raylib");
+const builtin = @import("builtin");
 const Snake = @import("Snake.zig").Snake;
 const Food = @import("Food.zig").Food;
 
 const thth_sound_file = @embedFile("thth_sound");
+const gotem_sound_file = @embedFile("gotem_sound");
 const disconnected_sound_file = @embedFile("disconnected_sound");
 
 const fmt = std.fmt;
@@ -18,6 +20,7 @@ pub const Game = struct {
     screen: Screen,
     snake: Snake,
     food: Food,
+    poison: Food,
     font: ?rl.Font,
     score: i32,
     score_best: i32,
@@ -25,9 +28,11 @@ pub const Game = struct {
     pub fn init(screenWidth: i32, screenHeight: i32, screenPadding: i32) Game {
         const snake = Snake.init(0, 0, 20, .right, .white);
         const food = Food.init(0, 0, 10, .red);
+        const poison = Food.init(0, 0, 10, .dark_green);
         var game = Game{
             .snake = snake,
             .food = food,
+            .poison = poison,
             .screen = .{
                 .width = screenWidth,
                 .height = screenHeight,
@@ -63,11 +68,17 @@ pub const Game = struct {
         }
         self.food.pos.x = @as(f32, @floatFromInt(self.randomPosition(self.screen.width)));
         self.food.pos.y = @as(f32, @floatFromInt(self.randomPosition(self.screen.height)));
+        self.poison.pos.x = @as(f32, @floatFromInt(self.randomPosition(self.screen.width)));
+        self.poison.pos.y = @as(f32, @floatFromInt(self.randomPosition(self.screen.height)));
         for (self.snake.pos[0..self.snake.length]) |p| {
             const rect = rl.Rectangle.init(p.x, p.y, self.snake.size, self.snake.size);
             while (rl.checkCollisionCircleRec(self.food.pos, self.food.size, rect)) {
                 self.food.pos.x = @as(f32, @floatFromInt(self.randomPosition(self.screen.width)));
                 self.food.pos.y = @as(f32, @floatFromInt(self.randomPosition(self.screen.height)));
+            }
+            while (rl.checkCollisionCircleRec(self.poison.pos, self.poison.size, rect)) {
+                self.poison.pos.x = @as(f32, @floatFromInt(self.randomPosition(self.screen.width)));
+                self.poison.pos.y = @as(f32, @floatFromInt(self.randomPosition(self.screen.height)));
             }
         }
     }
@@ -126,6 +137,11 @@ pub const Game = struct {
         const gameoverSound = rl.loadSoundFromWave(gameoverSoundWave);
         defer rl.unloadSound(gameoverSound);
 
+        const poisonSoundWave = try rl.loadWaveFromMemory(".wav", gotem_sound_file);
+        defer rl.unloadWave(poisonSoundWave);
+        const poisonSound = rl.loadSoundFromWave(poisonSoundWave);
+        defer rl.unloadSound(poisonSound);
+
         while (!rl.windowShouldClose()) {
             rl.beginDrawing();
             defer rl.endDrawing();
@@ -177,6 +193,7 @@ pub const Game = struct {
                 });
                 self.snake.draw();
                 self.food.draw();
+                self.poison.draw();
                 continue;
             }
 
@@ -187,13 +204,17 @@ pub const Game = struct {
                     if (rl.isSoundPlaying(eatSound)) {
                         rl.stopSound(eatSound);
                     }
+                    if (rl.isSoundPlaying(poisonSound)) {
+                        rl.stopSound(poisonSound);
+                    }
                     rl.playSound(gameoverSound);
                 }
             }
 
             if (@rem(frames_counter, 5) == 0) {
                 self.snake.step();
-                if (rl.checkCollisionCircleRec(self.food.pos, self.food.size, self.snake.rectangle())) {
+                const rect = self.snake.rectangle();
+                if (rl.checkCollisionCircleRec(self.food.pos, self.food.size, rect)) {
                     self.score += 1;
                     self.snake.pos[self.snake.length].x = 0;
                     self.snake.pos[self.snake.length].y = 0;
@@ -203,10 +224,24 @@ pub const Game = struct {
                         rl.playSound(eatSound);
                     }
                 }
+                if (rl.checkCollisionCircleRec(self.poison.pos, self.poison.size, rect)) {
+                    gameover = true;
+                    frames_counter = 0;
+                    if (!rl.isSoundPlaying(poisonSound)) {
+                        if (rl.isSoundPlaying(eatSound)) {
+                            rl.stopSound(eatSound);
+                        }
+                        if (rl.isSoundPlaying(gameoverSound)) {
+                            rl.stopSound(gameoverSound);
+                        }
+                        rl.playSound(poisonSound);
+                    }
+                }
             }
 
             self.snake.draw();
             self.food.draw();
+            self.poison.draw();
 
             self.updateDirection();
 

@@ -26,6 +26,9 @@ pub fn build(b: *std.Build) void {
     exe.root_module.addAnonymousImport("thth_sound", .{
         .root_source_file = b.path("media/thth.wav"),
     });
+    exe.root_module.addAnonymousImport("gotem_sound", .{
+        .root_source_file = b.path("media/gotem.wav"),
+    });
     exe.root_module.addAnonymousImport("disconnected_sound", .{
         .root_source_file = b.path("media/disconnected.wav"),
     });
