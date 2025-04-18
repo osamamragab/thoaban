@@ -50,7 +50,7 @@ pub const Game = struct {
         return rl.getRandomValue(self.screen.padding * 2, pos - self.screen.padding * 2);
     }
 
-    pub fn reset(self: *Game, hard: bool) void {
+    fn reset(self: *Game, hard: bool) void {
         if (hard) {
             if (self.score > self.score_best) {
                 self.score_best = self.score;
@@ -100,7 +100,7 @@ pub const Game = struct {
         rl.drawTextEx(self.font.?, text, pos, fontSize, spacing, tint);
     }
 
-    pub fn updateDirection(self: *Game) void {
+    fn updateDirection(self: *Game) void {
         if (rl.isKeyDown(rl.KeyboardKey.up) or rl.isKeyDown(rl.KeyboardKey.w) or rl.isKeyDown(rl.KeyboardKey.k)) self.snake.setDirection(.up);
         if (rl.isKeyDown(rl.KeyboardKey.down) or rl.isKeyDown(rl.KeyboardKey.s) or rl.isKeyDown(rl.KeyboardKey.j)) self.snake.setDirection(.down);
         if (rl.isKeyDown(rl.KeyboardKey.left) or rl.isKeyDown(rl.KeyboardKey.a) or rl.isKeyDown(rl.KeyboardKey.h)) self.snake.setDirection(.left);
@@ -195,8 +195,8 @@ pub const Game = struct {
                 self.snake.step();
                 if (rl.checkCollisionCircleRec(self.food.pos, self.food.size, self.snake.rectangle())) {
                     self.score += 1;
-					self.snake.pos[self.snake.length].x = 0;
-					self.snake.pos[self.snake.length].y = 0;
+                    self.snake.pos[self.snake.length].x = 0;
+                    self.snake.pos[self.snake.length].y = 0;
                     self.snake.length += 1;
                     self.reset(false);
                     if (!rl.isSoundPlaying(eatSound)) {

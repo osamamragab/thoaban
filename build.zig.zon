@@ -1,7 +1,7 @@
 .{
     .name = .thoaban,
     .version = "1.0.1",
-	.fingerprint = 0x64abdf7ca0fc7e24,
+    .fingerprint = 0x64abdf7ca0fc7e24,
     .minimum_zig_version = "0.14.0",
     .paths = .{
         "build.zig",

@@ -21,7 +21,7 @@ pub const Food = struct {
         rl.drawCircle(
             @as(i32, @intFromFloat(self.pos.x)),
             @as(i32, @intFromFloat(self.pos.y)),
-			self.size,
+            self.size,
             self.color,
         );
     }
