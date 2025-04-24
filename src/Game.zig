@@ -5,10 +5,9 @@ const Snake = @import("Snake.zig").Snake;
 const Food = @import("Food.zig").Food;
 
 const thth_sound_file = @embedFile("thth_sound");
-const gotem_sound_file = @embedFile("gotem_sound");
+const zawahif_sound_file = @embedFile("zawahif_sound");
+const krudya_sound_file = @embedFile("krudya_sound");
 const disconnected_sound_file = @embedFile("disconnected_sound");
-
-const fmt = std.fmt;
 
 pub const Screen = struct {
     width: i32,
@@ -132,12 +131,17 @@ pub const Game = struct {
         const eatSound = rl.loadSoundFromWave(eatSoundWave);
         defer rl.unloadSound(eatSound);
 
+        const eat2SoundWave = try rl.loadWaveFromMemory(".wav", zawahif_sound_file);
+        defer rl.unloadWave(eat2SoundWave);
+        const eat2Sound = rl.loadSoundFromWave(eat2SoundWave);
+        defer rl.unloadSound(eat2Sound);
+
         const gameoverSoundWave = try rl.loadWaveFromMemory(".wav", disconnected_sound_file);
         defer rl.unloadWave(gameoverSoundWave);
         const gameoverSound = rl.loadSoundFromWave(gameoverSoundWave);
         defer rl.unloadSound(gameoverSound);
 
-        const poisonSoundWave = try rl.loadWaveFromMemory(".wav", gotem_sound_file);
+        const poisonSoundWave = try rl.loadWaveFromMemory(".wav", krudya_sound_file);
         defer rl.unloadWave(poisonSoundWave);
         const poisonSound = rl.loadSoundFromWave(poisonSoundWave);
         defer rl.unloadSound(poisonSound);
@@ -204,6 +208,9 @@ pub const Game = struct {
                     if (rl.isSoundPlaying(eatSound)) {
                         rl.stopSound(eatSound);
                     }
+                    if (rl.isSoundPlaying(eat2Sound)) {
+                        rl.stopSound(eat2Sound);
+                    }
                     if (rl.isSoundPlaying(poisonSound)) {
                         rl.stopSound(poisonSound);
                     }
@@ -220,8 +227,20 @@ pub const Game = struct {
                     self.snake.pos[self.snake.length].y = 0;
                     self.snake.length += 1;
                     self.reset(false);
-                    if (!rl.isSoundPlaying(eatSound)) {
-                        rl.playSound(eatSound);
+                    if (@rem(self.score, 2) == 0) {
+                        if (rl.isSoundPlaying(eatSound)) {
+                            rl.stopSound(eatSound);
+                        }
+                        if (!rl.isSoundPlaying(eat2Sound)) {
+                            rl.playSound(eat2Sound);
+                        }
+                    } else {
+                        if (rl.isSoundPlaying(eat2Sound)) {
+                            rl.stopSound(eat2Sound);
+                        }
+                        if (!rl.isSoundPlaying(eatSound)) {
+                            rl.playSound(eatSound);
+                        }
                     }
                 }
                 if (rl.checkCollisionCircleRec(self.poison.pos, self.poison.size, rect)) {
